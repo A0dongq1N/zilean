@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zilean - 管理</title>
+    <link rel="stylesheet" href="./options.css" />
+  </head>
+  <body class="dash">
+    <header class="dash-header">
+      <div class="dash-brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M7 7h10L8 17h10" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <div>
+          <div class="brand-name">Zilean · 时光守护者</div>
+          <div class="brand-badge">Chrome Extension MV3</div>
+        </div>
+      </div>
+      <label class="dash-search">
+        <input id="memo-search" type="search" placeholder="全局检索高亮、批注、网址… " />
+      </label>
+      <nav class="dash-nav" aria-label="管理页">
+        <button type="button" class="view-tab on" data-view="notes">全部笔记</button>
+        <button type="button" class="view-tab" data-view="dups">重复标签页</button>
+        <button type="button" class="view-tab" data-view="settings">插件设置</button>
+      </nav>
+      <div class="dash-tools">
+        <button id="export" class="btn secondary" type="button">备份/导出</button>
+        <label class="btn secondary">
+          导入
+          <input id="import" type="file" accept="application/json" hidden />
+        </label>
+        <button id="add-memo" class="btn primary" type="button">+ 添加备忘</button>
+      </div>
+    </header>
+
+    <aside class="dash-aside">
+      <div class="aside-label">空间导航</div>
+      <nav class="aside-nav">
+        <button type="button" class="view-tab on" data-view="notes">
+          <span>全部记忆笔记</span>
+          <b id="nav-memo-count">0</b>
+        </button>
+        <button type="button" class="view-tab" data-view="dups">
+          <span>重复标签页清理</span>
+          <b id="nav-dup-count" class="danger-count">0</b>
+        </button>
+        <button type="button" class="view-tab" data-view="settings">
+          <span>插件设置</span>
+        </button>
+      </nav>
+      <div class="aside-label">高亮色彩</div>
+      <div id="color-legend" class="color-legend"></div>
+      <div class="storage-card">
+        <div class="storage-row"><span>本地存储</span><span id="storage-bytes">计算中…</span></div>
+        <div class="storage-track"><div id="storage-bar"></div></div>
+        <span class="storage-hint">只存在这台浏览器里</span>
+      </div>
+    </aside>
+
+    <div class="dash-main">
+      <section id="view-notes">
+        <div class="stat-row" id="metrics"></div>
+        <div class="toolbar">
+          <div class="type-row" id="kind-chips">
+            <button type="button" class="type-btn on" data-kind="all">全部类型</button>
+            <button type="button" class="type-btn" data-kind="float">划词高亮</button>
+            <button type="button" class="type-btn" data-kind="pin">DOM 图钉</button>
+            <button type="button" class="type-btn" data-kind="shot">区域截图</button>
+            <button type="button" class="type-btn" data-kind="video">视频时间戳</button>
+          </div>
+          <div class="chips" id="domain-chips"></div>
+        </div>
+        <p id="sample-note" class="sample-note" hidden></p>
+        <div id="issues" class="issues" hidden></div>
+        <div class="split">
+          <div id="memo-list" class="note-stream"></div>
+          <aside id="memo-detail" class="inspector"></aside>
+        </div>
+      </section>
+
+      <section id="view-dups" hidden>
+        <div class="page-head">
+          <div>
+            <div class="kicker">DUPLICATE TAB MANAGER</div>
+            <h2>重复标签页智能治理</h2>
+            <p class="lead">地址完全相同才算重复。每组都会留下一个标签。</p>
+          </div>
+          <button type="button" id="dup-refresh" class="btn secondary">全窗口重新扫描</button>
+        </div>
+        <div class="stat-row" id="dup-metrics"></div>
+        <p id="dup-sample-note" class="sample-note" hidden>现在没有重复标签。下面这条是示例，按钮不会真的关掉页面。</p>
+        <div class="split">
+          <div id="dup-list" class="dup-list"></div>
+          <aside class="inspector rules-card">
+            <h3>重复判定</h3>
+            <p>现在只把完整地址一模一样的标签算成一组。问号后面的参数、井号锚点不同，就不会并在一起。</p>
+            <p>点「只留一个」会关掉同组里其余标签，正在看的那一个会留下来。</p>
+            <p class="storage-hint">开关在「插件设置 → 域名与提醒」里的「重复 tab 提示」。</p>
+          </aside>
+        </div>
+      </section>
+
+      <section id="view-settings" hidden>
+        <div class="page-head">
+          <div>
+            <div class="kicker">chrome://extensions 选项页</div>
+            <h2>首选项与本地配置</h2>
+            <p class="lead">弹幕、页边按钮、重复页提示，改完立刻作用在已经打开的网页上。</p>
+          </div>
+        </div>
+        <div class="set-tabs" id="set-tabs">
+          <button type="button" class="set-tab on" data-set="general">通用外观与行为</button>
+          <button type="button" class="set-tab" data-set="reminders">弹幕与页边</button>
+          <button type="button" class="set-tab" data-set="rules">域名与提醒</button>
+          <button type="button" class="set-tab" data-set="privacy">本地存储</button>
+          <button type="button" class="set-tab" data-set="shortcuts">快捷键</button>
+        </div>
+
+        <div class="set-panel" id="set-general">
+          <div class="set-grid">
+            <label class="set-card">
+              <span>默认颜色</span>
+              <input type="color" id="set-color" />
+            </label>
+            <label class="set-card">
+              <span>默认字号 (px)</span>
+              <input type="number" id="set-size" min="10" max="72" />
+            </label>
+            <label class="set-card">
+              <span>默认字体</span>
+              <div id="set-font-mount"></div>
+            </label>
+          </div>
+        </div>
+
+        <div class="set-panel" id="set-reminders" hidden>
+          <div class="set-grid">
+            <label class="toggle set-card">
+              <span>默认显示弹幕</span>
+              <input type="checkbox" id="set-visible" />
+              <span class="toggle-ui"></span>
+            </label>
+            <label class="toggle set-card">
+              <span>循环播放</span>
+              <input type="checkbox" id="set-loop" />
+              <span class="toggle-ui"></span>
+            </label>
+            <label class="toggle set-card">
+              <span>浮动按钮自动贴边隐藏</span>
+              <input type="checkbox" id="set-fab-autohide" />
+              <span class="toggle-ui"></span>
+            </label>
+            <div class="set-card">
+              <span>浮动按钮位置</span>
+              <button type="button" id="reset-fab" class="btn secondary">重置页边位置</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="set-panel" id="set-rules" hidden>
+          <label class="toggle set-card">
+            <span>重复 tab 提示</span>
+            <input type="checkbox" id="set-duplicates" />
+            <span class="toggle-ui"></span>
+          </label>
+          <p class="lead">打开同一个完整地址时，网页顶部和侧栏会出现提示。点「只留一个」会保留一个标签，关掉其余。</p>
+        </div>
+
+        <div class="set-panel" id="set-privacy" hidden>
+          <div class="privacy-banner">备忘、颜色和匹配规则都在本机的 chrome.storage.local 里，不会上传。</div>
+          <p class="lead">右上角「备份/导出」下载 JSON，「导入」按 id 合并，同一条以较新的修改时间为准。</p>
+        </div>
+
+        <div class="set-panel" id="set-shortcuts" hidden>
+          <ul class="shortcut-list">
+            <li><span>打开侧栏</span><span><kbd>Alt</kbd><kbd>Z</kbd></span></li>
+            <li><span>取消点选元素</span><span><kbd>Esc</kbd></span></li>
+          </ul>
+        </div>
+      </section>
+
+      <dialog id="editor">
+        <form method="dialog" id="editor-form">
+          <h3 id="editor-title">添加备忘</h3>
+          <label>
+            备忘内容
+            <div class="zl-voice-wrap">
+              <textarea name="text" required></textarea>
+              <span id="editor-voice-mount"></span>
+            </div>
+          </label>
+          <div class="row">
+            <label>
+              匹配模式
+              <select name="matchMode" required>
+                <option value="exact">精确 URL</option>
+                <option value="prefix">路径前缀</option>
+                <option value="domain">域名</option>
+                <option value="regex">正则</option>
+              </select>
+            </label>
+            <label class="grow">
+              匹配字符串
+              <input name="pattern" type="text" required />
+            </label>
+          </div>
+          <label>
+            页面元素（可选，悬停提示）
+            <input name="selector" type="text" placeholder="空着则作为弹幕" />
+          </label>
+          <label>
+            元素说明
+            <input name="elementLabel" type="text" placeholder="例如 button · 提交" />
+          </label>
+          <label>
+            颜色
+            <div id="editor-color-mount"></div>
+          </label>
+          <div class="row">
+            <label class="grow">
+              字体
+              <div id="editor-font-mount"></div>
+            </label>
+            <label>
+              字号 (px)
+              <input name="fontSize" type="number" min="10" max="72" placeholder="默认" />
+            </label>
+          </div>
+          <label class="inline">
+            <input name="enabled" type="checkbox" />
+            启用
+          </label>
+          <menu>
+            <button type="button" value="cancel" class="btn secondary" id="editor-cancel">取消</button>
+            <button type="submit" value="save" class="btn primary">保存</button>
+          </menu>
+        </form>
+      </dialog>
+    </div>
+    <script type="module" src="./options.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zilean</title>
+    <link rel="stylesheet" href="./panel.css" />
+  </head>
+  <body>
+    <header class="app-bar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M7 7h10L8 17h10" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <div class="brand-copy">
+          <div class="brand-name" id="page-title">这一页</div>
+          <div class="brand-sub" id="current-url">加载中…</div>
+        </div>
+      </div>
+      <div class="app-actions">
+        <button type="button" id="visible-default" class="icon-btn" title="显示弹幕" aria-label="显示弹幕" aria-pressed="true">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M2.5 12s3.6-6.5 9.5-6.5S21.5 12 21.5 12 17.9 18.5 12 18.5 2.5 12 2.5 12Z" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/>
+            <circle cx="12" cy="12" r="2.4" fill="none" stroke="currentColor" stroke-width="1.75"/>
+          </svg>
+        </button>
+        <button type="button" id="loop" class="icon-btn" title="循环播放" aria-label="循环播放" aria-pressed="true">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M17 3.5 20 6.5 17 9.5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M4 12.5V10a4 4 0 0 1 4-4h12" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+            <path d="M7 20.5 4 17.5 7 14.5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M20 11.5V14a4 4 0 0 1-4 4H4" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <button id="open-options" class="icon-btn" type="button" title="全部备忘与设置" aria-label="全部备忘与设置">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.75"/>
+            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <button type="button" id="dup-banner" class="dup-banner" hidden>
+      <span class="dup-banner-text">同一地址开了 <span id="duplicate-count">0</span> 个</span>
+      <span class="dup-banner-go">处理</span>
+    </button>
+
+    <div class="finder">
+      <input id="memo-search" type="search" placeholder="在这一页里找…" />
+    </div>
+
+    <section class="chrono" id="chrono">
+      <div class="chrono-tabs">
+        <button type="button" class="chrono-tab on" data-chrono="timeline">时光轴</button>
+        <button type="button" class="chrono-tab" data-chrono="notes">本页笔记</button>
+      </div>
+      <div id="chrono-panel">
+        <div class="scrub-head">
+          <span>时光回溯</span>
+          <b id="scrub-label">现在</b>
+        </div>
+        <input id="time-scrub" type="range" min="0" max="100" value="100" aria-label="时光回溯滑块" />
+        <div class="scrub-actions">
+          <button type="button" id="chrono-replay">时钟回溯</button>
+          <button type="button" id="chrono-prev" title="上一个时刻">上一刻</button>
+          <button type="button" id="chrono-next" title="下一个时刻">下一刻</button>
+        </div>
+        <p id="chrono-note" class="chrono-note"></p>
+        <ol id="chrono-nodes" class="chrono-nodes"></ol>
+      </div>
+    </section>
+
+    <main class="stage" id="view-memos">
+      <div class="memos" id="memo-list"></div>
+      <aside id="dup-sheet" class="sheet" hidden>
+        <div class="sheet-head">
+          <div class="sheet-title">重复打开的页面</div>
+          <div class="sheet-actions">
+            <button id="check-duplicates" class="text-btn" type="button">刷新</button>
+            <button id="dup-close" class="icon-btn" type="button" title="返回" aria-label="返回">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="duplicates" id="duplicate-list"></div>
+      </aside>
+    </main>
+
+    <div id="pick-banner" class="pick-banner" hidden>
+      回到左边网页，把鼠标移到按钮或文字上，<b>点一下</b>。Esc 取消。
+    </div>
+
+    <section class="composer" id="add-card">
+      <div class="composer-shell" id="add-shell">
+        <button type="button" id="add-toggle" class="composer-grow">
+          <span class="composer-placeholder">写一句，或点麦克风</span>
+        </button>
+        <button type="button" id="add-pick-shell" class="zl-voice" title="选页面元素" aria-label="选页面元素">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 4.5h12M6 19.5h12M4.5 6v12M19.5 6v12" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+            <circle cx="12" cy="12" r="2.2" fill="none" stroke="currentColor" stroke-width="1.75"/>
+          </svg>
+        </button>
+        <button type="button" id="add-voice" class="zl-voice" title="说话" aria-label="说话">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="9" y="3.5" width="6" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M6.5 11.5a5.5 5.5 0 0 0 11 0M12 17v3.5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <button type="button" id="add-open" class="composer-send" title="写一句" aria-label="写一句">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <form id="add-form" class="add-form" hidden>
+        <textarea name="text" placeholder="它会从屏幕上飘过去…" required></textarea>
+        <p class="pin-hint" id="add-pin-hint" hidden></p>
+        <div id="add-advanced" class="add-advanced" hidden>
+          <div class="row">
+            <label>
+              出现在
+              <select name="matchMode">
+                <option value="exact">仅此地址</option>
+                <option value="prefix">这条路径</option>
+                <option value="domain">整个站点</option>
+                <option value="regex">自定义规则</option>
+              </select>
+            </label>
+          </div>
+          <label>
+            匹配
+            <input name="pattern" type="text" required />
+          </label>
+          <input name="selector" type="hidden" />
+          <input name="elementLabel" type="hidden" />
+          <label>
+            颜色
+            <div id="add-color-mount"></div>
+          </label>
+          <div class="row">
+            <label class="grow">
+              字体
+              <div id="add-font-mount"></div>
+            </label>
+            <label>
+              字号
+              <input name="fontSize" type="number" min="10" max="72" placeholder="默认" />
+            </label>
+          </div>
+        </div>
+        <p class="voice-hint" id="add-voice-hint" hidden></p>
+        <div class="form-bar">
+          <div class="form-links">
+          <button type="button" id="add-pick" class="more-btn">钉在页面元素上</button>
+          <button type="button" id="add-more" class="more-btn">出现范围与样式</button>
+          </div>
+          <div class="form-actions">
+            <span id="add-voice-mount"></span>
+            <button type="button" id="add-cancel" class="btn secondary">取消</button>
+            <button type="submit" class="composer-send" title="钉住" aria-label="钉住">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 12.5 10 17l9-10" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <script type="module" src="./panel.ts"></script>
+  </body>
+</html>
